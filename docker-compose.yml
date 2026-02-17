@@ -1,0 +1,26 @@
+services:
+  scanner:
+    build: ./scanner
+    container_name: secrets-scanner
+    ports:
+      - "8001:8001"
+    networks:
+      - secrets-net
+
+  orchestrator:
+    build: ./orchestrator
+    container_name: secrets-orchestrator
+    ports:
+      - "8000:8000"
+    environment:
+      - SCANNER_URL=http://scanner:8001
+    volumes:
+      - ./test-repos:/repos:ro
+    depends_on:
+      - scanner
+    networks:
+      - secrets-net
+
+networks:
+  secrets-net:
+    driver: bridge

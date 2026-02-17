@@ -1,0 +1,1227 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Secrets Scanner</title>
+
+  <style>
+    * { 
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; 
+    }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, sans-serif; 
+      display: flex;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      min-height: 100vh;
+    }
+
+    body.dark-theme { 
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .sidebar {
+      width: 280px;
+      background: white;
+      padding: 24px 16px;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark-theme .sidebar {
+      background: #1e293b;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+
+    body.dark-theme .logo {
+      color: #60a5fa;
+    }
+
+    .logo-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    body.dark-theme .logo-subtitle {
+      color: #94a3b8;
+      border-bottom-color: #334155;
+    }
+
+    .nav-section {
+      margin-bottom: 24px;
+    }
+
+    .nav-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clear-history-btn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      text-decoration: underline;
+    }
+
+    .clear-history-btn:hover {
+      background: #fee2e2;
+      text-decoration: none;
+    }
+
+    body.dark-theme .clear-history-btn:hover {
+      background: #7f1d1d;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    body.dark-theme .nav-link {
+      color: #cbd5e1;
+    }
+
+    .nav-link:hover {
+      background: #f1f5f9;
+      color: #2563eb;
+    }
+
+    body.dark-theme .nav-link:hover {
+      background: #334155;
+      color: #60a5fa;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      padding: 10px 16px;
+      background: #e2e8f0;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+      color: #475569;
+      transition: all 0.2s;
+    }
+
+    body.dark-theme .theme-toggle {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    .theme-toggle:hover {
+      background: #cbd5e1;
+    }
+
+    body.dark-theme .theme-toggle:hover {
+      background: #475569;
+    }
+
+    .history-section {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 16px;
+      max-height: 400px;
+    }
+
+    .history-item {
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    body.dark-theme .history-item {
+      background: #0f172a;
+    }
+
+    .history-item:hover {
+      background: #e2e8f0;
+      border-left-color: #2563eb;
+    }
+
+    body.dark-theme .history-item:hover {
+      background: #1e293b;
+      border-left-color: #60a5fa;
+    }
+
+    .history-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    body.dark-theme .history-item-title {
+      color: #e2e8f0;
+    }
+
+    .history-item-meta {
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    body.dark-theme .history-item-meta {
+      color: #94a3b8;
+    }
+
+    .history-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-left: 4px;
+    }
+
+    .badge-clean { background: #dbeafe; color: #1e40af; }
+    .badge-secrets { background: #fee2e2; color: #991b1b; }
+
+    .main-content {
+      flex: 1;
+      padding: 30px 40px;
+      overflow-y: auto;
+      max-width: 1200px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 15px;
+      padding: 32px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+    }
+
+    body.dark-theme .container {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    h1 { 
+      font-size: 38px;
+      color: #1e40af;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    body.dark-theme h1 {
+      color: #60a5fa;
+    }
+    
+    .subtitle { 
+      color: #64748b; 
+      font-size: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    body.dark-theme .subtitle {
+      color: #94a3b8;
+      border-bottom-color: #334155;
+    }
+
+    .card {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.2s, box-shadow 0.2s;
+      scroll-margin-top: 20px;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    body.dark-theme .card {
+      background: #0f172a;
+      border-color: #334155;
+    }
+
+    .input-row { 
+      display: flex; 
+      gap: 12px; 
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    input, select {
+      padding: 12px 15px;
+      flex: 1;
+      min-width: 250px;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      font-size: 14px;
+      background: white;
+      color: #1e293b;
+      transition: all 0.2s;
+    }
+
+    body.dark-theme input,
+    body.dark-theme select {
+      background: #1e293b;
+      border-color: #475569;
+      color: #e2e8f0;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    body.dark-theme input:focus,
+    body.dark-theme select:focus {
+      border-color: #60a5fa;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #1e40af;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    button:disabled { 
+      opacity: 0.6; 
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .download-btn {
+      background: #f59e0b;
+      margin-top: 10px;
+    }
+
+    .download-btn:hover {
+      background: #d97706;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    body.dark-theme table {
+      background: #1e293b;
+    }
+
+    thead {
+      background: #2563eb;
+      color: white;
+    }
+
+    body.dark-theme thead {
+      background: #1e40af;
+    }
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      border-bottom: 1px solid #e2e8f0;
+      padding: 11px 12px;
+      transition: background 0.2s;
+    }
+
+    body.dark-theme td {
+      border-bottom-color: #334155;
+    }
+
+    tr:hover td {
+      background: #f1f5f9;
+    }
+
+    body.dark-theme tr:hover td {
+      background: #0f172a;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-clean { 
+      background: #dbeafe; 
+      color: #1e40af; 
+    }
+    
+    .badge-secrets { 
+      background: #fee2e2; 
+      color: #991b1b; 
+    }
+
+    .badge-error {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .severity {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      margin-left: 8px;
+    }
+
+    .sev-critical { background: #fee2e2; color: #991b1b; }
+    .sev-high { background: #fed7aa; color: #9a3412; }
+    .sev-medium { background: #fef3c7; color: #92400e; }
+    .sev-low { background: #dbeafe; color: #1e40af; }
+    .sev-none { background: #d1fae5; color: #065f46; }
+
+    .spinner {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 2px solid #cbd5e1;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+
+    body.dark-theme .spinner {
+      border-color: #475569;
+      border-top-color: #60a5fa;
+    }
+
+    @keyframes spin { 
+      to { transform: rotate(360deg); } 
+    }
+
+    .big-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 20px;
+    }
+
+    .big-spinner-circle {
+      width: 80px;
+      height: 80px;
+      border: 6px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    body.dark-theme .big-spinner-circle {
+      border-color: #334155;
+      border-top-color: #60a5fa;
+    }
+
+    .big-spinner-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2563eb;
+      text-align: center;
+    }
+
+    body.dark-theme .big-spinner-text {
+      color: #60a5fa;
+    }
+
+    .big-spinner-subtext {
+      font-size: 14px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    body.dark-theme .big-spinner-subtext {
+      color: #94a3b8;
+    }
+
+    .report-content {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #1e293b;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+
+    body.dark-theme .report-content {
+      background: #0f172a;
+      border-color: #334155;
+      color: #e2e8f0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 15px;
+      margin: 16px 0;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(30, 64, 175, 0.05));
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid rgba(37, 99, 235, 0.2);
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.15);
+      border-color: rgba(37, 99, 235, 0.4);
+    }
+
+    body.dark-theme .stat-card {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(37, 99, 235, 0.08));
+      border-color: rgba(96, 165, 250, 0.25);
+    }
+
+    body.dark-theme .stat-card:hover {
+      border-color: rgba(96, 165, 250, 0.45);
+    }
+
+    .stat-card h4 {
+      margin: 0 0 8px 0;
+      color: #1e40af;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    body.dark-theme .stat-card h4 {
+      color: #60a5fa;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1e40af;
+    }
+
+    body.dark-theme .stat-number {
+      color: #60a5fa;
+    }
+
+    h2, h3 {
+      color: #1e293b;
+      font-weight: 600;
+      margin-top: 0;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    h3 {
+      font-size: 18px;
+    }
+
+    body.dark-theme h2,
+    body.dark-theme h3 {
+      color: #e2e8f0;
+    }
+
+    .info-box {
+      background: #dbeafe;
+      border-left: 4px solid #2563eb;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    body.dark-theme .info-box {
+      background: #1e3a5f;
+      border-left-color: #60a5fa;
+      color: #bfdbfe;
+    }
+
+    .info-box strong {
+      color: #1e40af;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    body.dark-theme .info-box strong {
+      color: #93c5fd;
+    }
+
+    #statusText {
+      margin-top: 12px;
+      font-weight: 600;
+      color: #2563eb;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .main-content {
+        padding: 20px;
+      }
+    }
+
+    #pdfFrame {
+      display: none;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <div class="logo">Secrets Scanner</div>
+  <div class="logo-subtitle">Security Analysis Tool</div>
+
+  <div class="nav-section">
+    <div class="nav-title">Navigation</div>
+    <div class="nav-link" onclick="scrollToSection('scan')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      New Scan
+    </div>
+    <div class="nav-link" onclick="scrollToSection('results')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      Scan Results
+    </div>
+    <div class="nav-link" onclick="scrollToSection('aiCard')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+      Analysis Report
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-title">
+      Recent Scans
+      <button class="clear-history-btn" onclick="clearHistory()" id="clearBtn" style="display:none;">clear</button>
+    </div>
+    <div class="history-section" id="historyList">
+      <div style="color: #94a3b8; font-size: 12px; text-align: center; padding: 20px;">
+        No scans yet
+      </div>
+    </div>
+  </div>
+
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+    🌙 Night Mode
+  </button>
+</div>
+
+<div class="main-content">
+  <div class="container" id="scan">
+    <h1>Secrets Scanner</h1>
+    <p class="subtitle">Scan GitHub repositories for exposed secrets and credentials</p>
+
+    <div class="card">
+      <div class="input-row">
+        <select id="scanType">
+          <option value="repo">Scan GitHub Repository</option>
+          <option value="local">Scan Local Path</option>
+        </select>
+
+        <input id="targetInput" placeholder="https://github.com/user/repo.git"/>
+        <button id="scanBtn">Start Scan</button>
+      </div>
+      
+      <div class="input-row">
+        <input id="tokenInput" type="password" placeholder="GitHub Token (optional - for private repos)" style="width:100%;"/>
+      </div>
+
+      <div class="info-box" id="tokenHelp">
+        <strong>GitHub Token Info</strong>
+        To scan private repositories, you need a Personal Access Token:
+        <br>1. Go to GitHub Settings → Developer settings → Personal access tokens
+        <br>2. Click "Generate new token (classic)"
+        <br>3. Select <code>repo</code> scope (full control of private repositories)
+        <br>4. Copy the token and paste it here
+      </div>
+
+      <p id="statusText"></p>
+    </div>
+  </div>
+
+  <div class="container" id="results" style="display:none; margin-top: 24px;">
+    <h2 style="margin-bottom: 16px;">Scan Results</h2>
+    
+    <div id="statsContainer"></div>
+
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Status</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody id="tableRows"></tbody>
+    </table>
+  </div>
+
+  <div class="container" id="aiCard" style="display:none; margin-top: 24px;">
+    <h2 style="margin-bottom: 16px;">Security Analysis Report</h2>
+    
+    <button class="download-btn" onclick="downloadPDF()" id="downloadPdfBtn" style="display:none;">
+      Download PDF Report
+    </button>
+    
+    <div id="aiLoadingState" style="display:none;">
+      <div class="big-spinner">
+        <div class="big-spinner-circle"></div>
+        <div class="big-spinner-text">Generating Security Analysis...</div>
+        <div class="big-spinner-subtext">Analyzing scan results and preparing recommendations</div>
+      </div>
+    </div>
+    
+    <div class="report-content" id="aiReportContent" style="display:none;"></div>
+  </div>
+</div>
+
+<iframe id="pdfFrame"></iframe>
+
+<script>
+var scanType = document.getElementById("scanType");
+var targetInput = document.getElementById("targetInput");
+var tokenInput = document.getElementById("tokenInput");
+var scanBtn = document.getElementById("scanBtn");
+var statusText = document.getElementById("statusText");
+var statsContainer = document.getElementById("statsContainer");
+var resultsTable = document.getElementById("resultsTable");
+var tableRows = document.getElementById("tableRows");
+var tokenHelp = document.getElementById("tokenHelp");
+var aiCard = document.getElementById("aiCard");
+var aiLoadingState = document.getElementById("aiLoadingState");
+var aiReportContent = document.getElementById("aiReportContent");
+var downloadPdfBtn = document.getElementById("downloadPdfBtn");
+var resultsSection = document.getElementById("results");
+var historyList = document.getElementById("historyList");
+var clearBtn = document.getElementById("clearBtn");
+var themeBtn = document.getElementById("themeBtn");
+
+var scanHistory = [];
+var currentScanData = null;
+var currentRepoUrl = "";
+
+function loadHistory() {
+  var saved = sessionStorage.getItem('scanHistory');
+  if (saved) {
+    scanHistory = JSON.parse(saved);
+    renderHistory();
+  }
+}
+
+function saveHistory() {
+  sessionStorage.setItem('scanHistory', JSON.stringify(scanHistory));
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('dark-theme');
+  var isDark = document.body.classList.contains('dark-theme');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  if (isDark) {
+    themeBtn.textContent = '☀️ Light Mode';
+  } else {
+    themeBtn.textContent = '🌙 Night Mode';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  var savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    themeBtn.textContent = '☀️ Light Mode';
+  } else {
+    themeBtn.textContent = '🌙 Night Mode';
+  }
+  loadHistory();
+});
+
+function scrollToSection(id) {
+  var element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+tokenInput.addEventListener('focus', function() {
+  tokenHelp.style.display = 'block';
+});
+
+targetInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    scanBtn.click();
+  }
+});
+
+tokenInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    scanBtn.click();
+  }
+});
+
+scanType.addEventListener("change", function() {
+  targetInput.value = "";
+  if (scanType.value === "repo") {
+    targetInput.placeholder = "https://github.com/user/repo.git";
+  } else {
+    targetInput.placeholder = "/repos/directory-name";
+  }
+});
+
+function resetUI() {
+  statusText.innerHTML = "";
+  statusText.textContent = "";
+  statsContainer.innerHTML = "";
+  tableRows.innerHTML = "";
+  resultsTable.style.display = "none";
+  resultsSection.style.display = "none";
+  aiCard.style.display = "none";
+  aiLoadingState.style.display = "none";
+  aiReportContent.style.display = "none";
+  aiReportContent.textContent = "";
+  downloadPdfBtn.style.display = "none";
+}
+
+function createBadge(status){
+  if (status === "error") {
+    return '<span class="status-badge badge-error">error</span>';
+  }
+  if (status === "secrets") {
+    return '<span class="status-badge badge-secrets">secrets</span>';
+  }
+  return '<span class="status-badge badge-clean">clean</span>';
+}
+
+function getDetectorInfo(detectors){
+  if(!detectors) return "";
+  var found = [];
+  for (var name in detectors) {
+    var info = detectors[name];
+    if (info && info.passed === false) {
+      found.push(name + " (" + info.matches_count + ")");
+    }
+  }
+  if (found.length > 0) {
+    return found.join(", ");
+  }
+  return "—";
+}
+
+function getSeverity(count) {
+  if (count > 10) return 'CRITICAL';
+  if (count > 5) return 'HIGH';
+  if (count > 2) return 'MEDIUM';
+  if (count > 0) return 'LOW';
+  return 'NONE';
+}
+
+function addToHistory(target, data) {
+  var timestamp = new Date();
+  var timeStr = timestamp.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+  var parts = target.split('/');
+  var repoName = parts[parts.length - 1].replace('.git', '');
+  
+  var secretsCount = 0;
+  if (data.summary && data.summary.files_with_secrets) {
+    secretsCount = data.summary.files_with_secrets;
+  }
+  
+  var historyItem = {
+    id: timestamp.getTime(),
+    name: repoName,
+    target: target,
+    time: timeStr,
+    date: timestamp.toLocaleDateString('hr-HR'),
+    hasSecrets: secretsCount > 0,
+    data: data,
+    report: null
+  };
+
+  scanHistory.unshift(historyItem);
+
+  if (scanHistory.length > 20) {
+    scanHistory = scanHistory.slice(0, 20);
+  }
+
+  saveHistory();
+  renderHistory();
+}
+
+function updateHistoryWithReport(report) {
+  if (scanHistory.length > 0) {
+    scanHistory[0].report = report;
+    saveHistory();
+  }
+}
+
+function renderHistory() {
+  if (scanHistory.length === 0) {
+    historyList.innerHTML = '<div style="color: #94a3b8; font-size: 12px; text-align: center; padding: 20px;">No scans yet</div>';
+    clearBtn.style.display = 'none';
+    return;
+  }
+
+  clearBtn.style.display = 'inline-block';
+
+  var html = '';
+  for (var i = 0; i < scanHistory.length; i++) {
+    var item = scanHistory[i];
+    var badgeClass = item.hasSecrets ? 'badge-secrets' : 'badge-clean';
+    var badgeText = item.hasSecrets ? 'secrets' : 'clean';
+    
+    html += '<div class="history-item" onclick="loadHistoryItem(' + item.id + ')">';
+    html += '<div class="history-item-title">';
+    html += item.name;
+    html += '<span class="history-badge ' + badgeClass + '">' + badgeText + '</span>';
+    html += '</div>';
+    html += '<div class="history-item-meta">' + item.date + ' ' + item.time + '</div>';
+    html += '</div>';
+  }
+  
+  historyList.innerHTML = html;
+}
+
+function loadHistoryItem(id) {
+  var item = null;
+  for (var i = 0; i < scanHistory.length; i++) {
+    if (scanHistory[i].id === id) {
+      item = scanHistory[i];
+      break;
+    }
+  }
+  
+  if (!item) return;
+
+  currentScanData = item.data;
+  currentRepoUrl = item.target;
+  
+  showResults(item.data, item.report);
+  scrollToSection('results');
+}
+
+function clearHistory() {
+  if (confirm('Clear all scan history?')) {
+    scanHistory = [];
+    saveHistory();
+    renderHistory();
+  }
+}
+
+function showResults(data, savedReport) {
+  console.log('Showing results', data);
+  
+  resultsSection.style.display = "";
+  currentScanData = data;
+
+  if (data.summary){
+    var filesScanned = data.summary.total_files_scanned || 0;
+    var secretsFound = data.summary.files_with_secrets || 0;
+    var errorsFound = data.summary.files_with_errors || 0;
+    var severity = getSeverity(secretsFound);
+    
+    var statsHtml = '<div class="stats-grid">';
+    statsHtml += '<div class="stat-card"><h4>Files Scanned</h4><p class="stat-number">' + filesScanned + '</p></div>';
+    statsHtml += '<div class="stat-card"><h4>Secrets Found</h4><p class="stat-number">' + secretsFound + '</p></div>';
+    statsHtml += '<div class="stat-card"><h4>Errors</h4><p class="stat-number">' + errorsFound + '</p></div>';
+    statsHtml += '</div>';
+    statsHtml += '<p style="text-align:center; margin-top:12px;">';
+    statsHtml += '<strong>Severity Level:</strong> ';
+    statsHtml += '<span class="severity sev-' + severity.toLowerCase() + '">' + severity + '</span>';
+    statsHtml += '</p>';
+    
+    statsContainer.innerHTML = statsHtml;
+  }
+
+  var results = data.all_results || [];
+  tableRows.innerHTML = "";
+  
+  if (results.length > 0) {
+    resultsTable.style.display = "";
+  } else {
+    resultsTable.style.display = "none";
+  }
+
+  for (var i = 0; i < results.length; i++) {
+    var item = results[i];
+    var filepath = item.filename || "(unknown)";
+    var hasSecrets = item.has_secrets === true;
+    var hasError = !!item.error;
+
+    var status = hasError ? "error" : (hasSecrets ? "secrets" : "clean");
+    var details = hasError ? item.error : getDetectorInfo(item.detectors);
+
+    var row = document.createElement("tr");
+    var cellColor = (hasError || hasSecrets) ? "color:#991b1b" : "color:#1e40af";
+    
+    row.innerHTML = '<td>' + filepath + '</td>' +
+                    '<td>' + createBadge(status) + '</td>' +
+                    '<td style="' + cellColor + '">' + (details || "—") + '</td>';
+    
+    tableRows.appendChild(row);
+  }
+
+  statusText.innerHTML = "";
+  if (data.summary){
+    var errors = data.summary.files_with_errors || 0;
+    var secrets = data.summary.files_with_secrets || 0;
+    
+    if (errors > 0){
+      statusText.textContent = "Scan complete (" + errors + " file(s) had errors)";
+      statusText.style.color = "#f59e0b";
+    } else if (secrets === 0){
+      statusText.textContent = "Scan complete - No secrets detected";
+      statusText.style.color = "#2563eb";
+    } else {
+      statusText.textContent = "Scan complete - Found secrets in " + secrets + " file(s)";
+      statusText.style.color = "#dc2626";
+    }
+  }
+  
+  aiCard.style.display = "";
+  
+  if (savedReport) {
+    aiLoadingState.style.display = "none";
+    aiReportContent.style.display = "";
+    aiReportContent.textContent = savedReport;
+    downloadPdfBtn.style.display = "";
+    return;
+  }
+  
+  aiLoadingState.style.display = "";
+  aiReportContent.style.display = "none";
+  downloadPdfBtn.style.display = "none";
+  
+  setTimeout(function() {
+    scrollToSection('results');
+  }, 300);
+  
+  fetch("/llm-report", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ scan_results: data })
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(llmData) {
+    var report = llmData.report || llmData.error || "Report generation failed";
+    
+    aiLoadingState.style.display = "none";
+    aiReportContent.style.display = "";
+    aiReportContent.textContent = report;
+    downloadPdfBtn.style.display = "";
+    
+    updateHistoryWithReport(report);
+  })
+  .catch(function(err){
+    console.log("AI report error:", err);
+    aiLoadingState.style.display = "none";
+    aiReportContent.style.display = "";
+    aiReportContent.textContent = "Failed to generate report: " + err.message;
+  });
+}
+
+function downloadPDF() {
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF();
+  
+  var content = aiReportContent.textContent;
+  var pageWidth = doc.internal.pageSize.getWidth();
+  var pageHeight = doc.internal.pageSize.getHeight();
+  var margin = 20;
+  var maxLineWidth = pageWidth - (margin * 2);
+  
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('Security Analysis Report', margin, margin);
+  
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  var dateStr = new Date().toLocaleString();
+  doc.text('Generated: ' + dateStr, margin, margin + 10);
+  
+  doc.setFontSize(11);
+  var lines = doc.splitTextToSize(content, maxLineWidth);
+  
+  var y = margin + 20;
+  for (var i = 0; i < lines.length; i++) {
+    if (y > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(lines[i], margin, y);
+    y += 7;
+  }
+  
+  var today = new Date();
+  var dateString = today.toISOString().split('T')[0];
+  doc.save('security-report-' + dateString + '.pdf');
+}
+
+scanBtn.onclick = function() {
+  var mode = scanType.value;
+  var target = targetInput.value.trim();
+  
+  if(!target){ 
+    alert("Please enter a repository URL or path"); 
+    return; 
+  }
+
+  resetUI();
+  
+  scanBtn.disabled = true;
+  statusText.innerHTML = '<span class="spinner"></span>Scanning...';
+  statusText.style.color = "#2563eb";
+  tokenHelp.style.display = 'none';
+  currentRepoUrl = target;
+
+  var endpoint = "/scan-repo";
+  if (mode === "local") {
+    endpoint = "/scan-local";
+  }
+  
+  var token = tokenInput.value.trim();
+  var payload = {};
+  
+  if (mode === "repo") {
+    payload.repo_url = target;
+    if (token) {
+      payload.github_token = token;
+    }
+  } else {
+    payload.path = target;
+  }
+
+  fetch(endpoint, {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  })
+  .then(function(response) {
+    if(!response.ok){
+      return response.json().then(function(data) {
+        statusText.innerHTML = "";
+        statusText.textContent = data.error || response.statusText;
+        statusText.style.color = "#dc2626";
+        scanBtn.disabled = false;
+        throw new Error(data.error || response.statusText);
+      });
+    }
+    return response.json();
+  })
+  .then(function(data) {
+    tokenInput.value = "";
+    addToHistory(target, data);
+    showResults(data);
+    scanBtn.disabled = false;
+  })
+  .catch(function(err){
+    console.log("Scan error:", err);
+    if (statusText.textContent === "") {
+      statusText.innerHTML = "";
+      statusText.textContent = "Error: " + err.message;
+      statusText.style.color = "#dc2626";
+    }
+    scanBtn.disabled = false;
+  });
+};
+</script>
+
+</body>
+</html>
