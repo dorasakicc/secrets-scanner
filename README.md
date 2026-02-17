@@ -127,10 +127,10 @@ git archive --format=zip --output=submission.zip HEAD
 ```
 
 ## Screenshot 1
-![Screenshot 1](screenshots/Snimka zaslona 2026-02-17 150315.png)
+![Screenshot 1](screenshots/slika1.png)
 
 ## Screenshot 2
-![Screenshot 2](screenshots/Snimka zaslona 2026-02-17 150409.png)
+![Screenshot 2](screenshots/slika2.png)
 
 ## Screenshot 3
-![Screenshot 3](screenshots/Snimka zaslona 2026-02-17 150431.png)
+![Screenshot 3](screenshots/slika3.png)
