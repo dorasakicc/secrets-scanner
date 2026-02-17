@@ -125,3 +125,4 @@ Never commit your `.env` file. This repo includes `.env` in `.gitignore` and pro
 ```bash
 git archive --format=zip --output=submission.zip HEAD
 ```
+![](screenshots/Snimka zaslona 2026-02-17 150315.png)
